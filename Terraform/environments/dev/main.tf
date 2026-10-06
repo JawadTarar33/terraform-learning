@@ -32,7 +32,7 @@ resource "local_file" "dev_key_pem" {
   file_permission = "0400"
 }
 
-# 2. EC2 Module (connected to VPC public subnet)
+# 2. EC2 Module (connected to VPC public subnet & RDS private subnet)
 module "ec2" {
   source = "../../modules/ec2"
 

@@ -7,7 +7,7 @@ terraform {
     }
   }
 
-  # If you want to use HCP Terraform / Terraform Cloud remote state:
+  #  To use HCP Terraform / Terraform Cloud remote state:
   # cloud {
   #   organization = "Learning-TeraForm33"
   #   workspaces {
