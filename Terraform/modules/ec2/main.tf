@@ -18,6 +18,7 @@ resource "aws_instance" "app_server" {
   vpc_security_group_ids      = var.vpc_security_group_ids
   associate_public_ip_address = var.associate_public_ip
   key_name                    = var.key_name
+  iam_instance_profile        = var.iam_instance_profile
 
   tags = merge(
     {

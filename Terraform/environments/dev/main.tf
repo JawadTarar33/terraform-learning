@@ -43,6 +43,7 @@ module "ec2" {
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   associate_public_ip    = true
   key_name               = aws_key_pair.dev_key.key_name
+  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
 }
 
 # 3. RDS Module (Ready for future expansion)
@@ -52,15 +53,22 @@ module "rds" {
   environment            = var.environment
   db_subnet_ids          = module.vpc.private_subnets
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
-  
+
   db_username = "devops"
   db_password = var.db_password
 }
-# 4. S3 Module (Ready for future expansion)
-# module "s3" {
-#   source = "../../modules/s3"
-#   ...
-# }
+
+# 4. S3 Module
+module "s3" {
+  source = "../../modules/s3"
+
+  bucket_name                   = var.bucket_name
+  tags                          = var.tags
+  enable_versioning             = var.enable_versioning
+  enable_server_side_encryption = var.enable_server_side_encryption
+  lifecycle_rules               = var.lifecycle_rules
+  bucket_public_access_block    = var.bucket_public_access_block
+}
 
 
 
@@ -72,9 +80,9 @@ resource "aws_security_group" "ec2_sg" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
