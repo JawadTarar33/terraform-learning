@@ -38,3 +38,13 @@ output "rds_address" {
   value       = module.rds.rds_address
 }
 
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer to access the web app"
+  value       = module.alb.alb_dns_name
+}
+
+output "asg_name" {
+  description = "Name of the Auto Scaling Group"
+  value       = module.asg.autoscaling_group_name
+}
+

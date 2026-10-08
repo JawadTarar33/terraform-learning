@@ -70,7 +70,47 @@ module "s3" {
   bucket_public_access_block    = var.bucket_public_access_block
 }
 
+# 5. ALB Module (in public subnets)
+module "alb" {
+  source = "../../modules/ALB"
 
+  project_name = var.project_name
+  environment  = var.environment
+  vpc_id       = module.vpc.vpc_id
+  subnets      = module.vpc.public_subnets
+  tags         = var.tags
+}
+
+# 6. ASG Module (connected to ALB target group)
+module "asg" {
+  source = "../../modules/ASG"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  subnet_ids                = module.vpc.public_subnets
+  image_id                  = module.ec2.ami_id
+  instance_type             = var.instance_type
+  key_name                  = aws_key_pair.dev_key.key_name
+  iam_instance_profile_name = aws_iam_instance_profile.ec2_profile.name
+  security_group_ids        = [aws_security_group.ec2_sg.id]
+  target_group_arns         = [module.alb.target_group_arn]
+
+  min_size         = var.asg_min_size
+  max_size         = var.asg_max_size
+  desired_capacity = var.asg_desired_capacity
+
+  user_data = <<-EOF
+              #!/bin/bash
+              apt-get update -y
+              apt-get install -y nginx
+              mkdir -p /var/www/html
+              echo "<h1>Deployed via ASG + ALB! Host: $(hostname)</h1>" > /var/www/html/index.html
+              systemctl enable nginx
+              systemctl restart nginx
+              EOF
+
+  tags = var.tags
+}
 
 #SECURITY GROUPS
 # 1. EC2
@@ -79,6 +119,7 @@ resource "aws_security_group" "ec2_sg" {
   description = "Security group for EC2 instances"
   vpc_id      = module.vpc.vpc_id
 
+  # SSH Access
   ingress {
     from_port   = 22
     to_port     = 22
@@ -86,6 +127,13 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # HTTP Web Traffic from ALB
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [module.alb.security_group_id]
+  }
 
   egress {
     from_port   = 0
@@ -95,7 +143,6 @@ resource "aws_security_group" "ec2_sg" {
   }
   tags = {
     Name = "${var.project_name}-${var.environment}-ec2-sg"
-
   }
 }
 

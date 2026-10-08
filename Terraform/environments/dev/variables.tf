@@ -19,7 +19,7 @@ variable "environment" {
 variable "instance_type" {
   description = "EC2 instance size"
   type        = string
-  default     = "t2.small"
+  default     = "t2.micro"
 }
 
 variable "db_password" {
@@ -28,54 +28,52 @@ variable "db_password" {
   sensitive   = true
 }
 
+# --- S3 Variables ---
 variable "bucket_name" {
   type        = string
   description = "Name of the S3 bucket"
 }
 
 variable "lifecycle_rules" {
-  type = list(object({
-    enabled = bool
-    id      = string
-    prefix  = string
-    tags    = map(string)
-    transitions = list(object({
-      days          = number
-      storage_class = string
-    }))
-    noncurrent_version_transitions = list(object({
-      noncurrent_days = number
-      storage_class   = string
-    }))
-    noncurrent_version_expiration = object({
-      noncurrent_days = number
-    })
-    expiration = object({
-      days = number
-    })
-    status = string
-  }))
+  type    = any
   default = []
 }
 
 variable "enable_versioning" {
-  type        = bool
-  description = "Enable versioning for the S3 bucket"
-  default     = true
+  type    = bool
+  default = true
 }
 
 variable "enable_server_side_encryption" {
-  type        = bool
-  description = "Enable server-side encryption for the S3 bucket"
-  default     = true
+  type    = bool
+  default = true
 }
 
 variable "bucket_public_access_block" {
-  type        = bool
-  description = "Enable public access block for the S3 bucket"
-  default     = false
+  type    = bool
+  default = false
 }
 
+# --- Optional ASG Sizing Overrides ---
+variable "asg_min_size" {
+  description = "Minimum instances for ASG"
+  type        = number
+  default     = 1
+}
+
+variable "asg_max_size" {
+  description = "Maximum instances for ASG"
+  type        = number
+  default     = 3
+}
+
+variable "asg_desired_capacity" {
+  description = "Desired instances for ASG"
+  type        = number
+  default     = 2
+}
+
+# --- Tags ---
 variable "tags" {
   description = "Default tags for all resources"
   type        = map(string)
